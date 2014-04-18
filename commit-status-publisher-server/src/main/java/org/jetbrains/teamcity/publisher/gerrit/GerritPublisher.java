@@ -1,5 +1,6 @@
 package org.jetbrains.teamcity.publisher.gerrit;
 
+import com.intellij.openapi.util.Pair;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -61,7 +62,9 @@ public class GerritPublisher extends BaseCommitStatusPublisher {
     try {
       JSch jsch = new JSch();
       addKeys(jsch, project);
-      session = jsch.getSession(getUsername(), getGerritServer(), 29418);
+		String gerritServer = getGerritServer();
+		Pair<String, Integer> gerritServerPair = extractPort(gerritServer, 29418);
+		session = jsch.getSession(getUsername(), gerritServerPair.getFirst(), gerritServerPair.getSecond());
       session.setConfig("StrictHostKeyChecking", "no");
       session.connect();
       channel = (ChannelExec) session.openChannel("exec");
@@ -83,6 +86,20 @@ public class GerritPublisher extends BaseCommitStatusPublisher {
         session.disconnect();
     }
   }
+
+	private Pair<String, Integer> extractPort(String serverString, int defaultPort) {
+		String serverName = serverString;
+		int serverPort = defaultPort;
+		if (serverString.contains(":")) {
+			String[] parts = serverString.split(":");
+			serverName = parts[0];
+			try {
+				serverPort = Integer.parseInt(parts[1]);
+			} catch (NumberFormatException e) {
+			}
+		}
+		return new Pair<String, Integer>(serverName, serverPort);
+	}
 
   private void addKeys(@NotNull JSch jsch, @NotNull SProject project) throws JSchException {
     String uploadedKeyId = myParams.get(ServerSshKeyManager.TEAMCITY_SSH_KEY_PROP);
