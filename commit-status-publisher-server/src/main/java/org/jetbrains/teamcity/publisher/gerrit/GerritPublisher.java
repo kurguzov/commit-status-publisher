@@ -36,6 +36,7 @@ public class GerritPublisher extends BaseCommitStatusPublisher {
   @Override
   public void buildFinished(@NotNull SFinishedBuild build, @NotNull BuildRevision revision) {
     Branch branch = build.getBranch();
+	  Loggers.SERVER.info("commit-publisher: Build finished for branch " + branch);
     if (branch == null || branch.isDefaultBranch())
       return;
 
@@ -48,6 +49,7 @@ public class GerritPublisher extends BaseCommitStatusPublisher {
            .append(" -m \"").append(msg).append("\" ")
            .append(revision.getRevision());
     try {
+		Loggers.SERVER.info("commit-publisher: runCommand " + command);
       runCommand(build.getBuildType().getProject(), command.toString());
     } catch (Exception e) {
       Loggers.SERVER.error("Error while running gerrit command '" + command + "'", e);
