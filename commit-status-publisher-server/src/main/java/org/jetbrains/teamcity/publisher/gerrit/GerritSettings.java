@@ -1,9 +1,8 @@
 package org.jetbrains.teamcity.publisher.gerrit;
 
 import jetbrains.buildServer.ExtensionHolder;
-import jetbrains.buildServer.TeamCityExtension;
+import jetbrains.buildServer.RootUrlHolder;
 import jetbrains.buildServer.serverSide.InvalidProperty;
-import jetbrains.buildServer.serverSide.ProjectManager;
 import jetbrains.buildServer.serverSide.PropertiesProcessor;
 import jetbrains.buildServer.ssh.ServerSshKeyManager;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
@@ -20,15 +19,18 @@ public class GerritSettings implements CommitStatusPublisherSettings {
 
   private final PluginDescriptor myDescriptor;
   private final ExtensionHolder myExtensionHolder;
+  private final RootUrlHolder rootUrlHolder;
   private final String[] myMandatoryProperties = new String[] {
           "gerritServer", "gerritProject", "gerritUsername",
           "successVote", "failureVote", TEAMCITY_SSH_KEY_PROP};
 
 
   public GerritSettings(@NotNull PluginDescriptor descriptor,
-                        @NotNull ExtensionHolder extensionHolder) {
+                        @NotNull ExtensionHolder extensionHolder,
+						@NotNull RootUrlHolder rootUrlHolder) {
     myDescriptor = descriptor;
     myExtensionHolder = extensionHolder;
+	  this.rootUrlHolder = rootUrlHolder;
   }
 
   @NotNull
@@ -58,9 +60,9 @@ public class GerritSettings implements CommitStatusPublisherSettings {
   public GerritPublisher createPublisher(@NotNull Map<String, String> params) {
     Collection<ServerSshKeyManager> extensions = myExtensionHolder.getExtensions(ServerSshKeyManager.class);
     if (extensions.isEmpty()) {
-      return new GerritPublisher(null, params);
+      return new GerritPublisher(null, params, rootUrlHolder.getRootUrl());
     } else {
-      return new GerritPublisher(extensions.iterator().next(), params);
+      return new GerritPublisher(extensions.iterator().next(), params, rootUrlHolder.getRootUrl());
     }
   }
 

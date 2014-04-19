@@ -26,11 +26,13 @@ import java.util.Map;
 public class GerritPublisher extends BaseCommitStatusPublisher {
 
   private final ServerSshKeyManager mySshKeyManager;
+	private final String serverUrl;
 
   public GerritPublisher(@Nullable ServerSshKeyManager sshKeyManager,
-                         @NotNull Map<String, String> params) {
+						 @NotNull Map<String, String> params, String serverUrl) {
     super(params);
     mySshKeyManager = sshKeyManager;
+	  this.serverUrl = serverUrl;
   }
 
   @Override
@@ -42,6 +44,9 @@ public class GerritPublisher extends BaseCommitStatusPublisher {
 
     String vote = build.getBuildStatus().isSuccessful() ? getSuccessVote() : getFailureVote();
     String msg = build.getBuildStatus().isSuccessful() ? "Successful build" : "Failed build";
+
+	  String buildLink = serverUrl + "/viewLog.html?buildId=" + build.getBuildId() + "&tab=buildLog";
+	  msg += ": " + buildLink;
 
     StringBuilder command = new StringBuilder();
     command.append("gerrit review --project ").append(getGerritProject())
